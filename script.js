@@ -12,24 +12,23 @@
 //   .reduce((x, y) => y + x);
 // result.subscribe((x) => console.log(x));
 
+
+// #2
+// buffer, takes the events that happened in the last 250 ms
+// and bundles them into an array
+// there is a really cool diagram that shows how events are transforming
+// https://d2eip9sf3oo6c2.cloudfront.net/asciicasts/Introduction%20to%20Reactive%20Programming/original_rxjs-use-an-event-stream-of-double-clicks-in-rxjs/rxjs-use-an-event-stream-of-double-clicks-in-rxjs-click-stream-diagram-one.png?1501284674
+
 var button = document.querySelector('.button')
 var label = document.querySelector('h4');
-
 var clickStream = Rx.Observable.fromEvent(button, 'click');
-
-const timeout = 250;
-const clicks$ = Rx.Observable.fromEvent(button, "click");
-const doubleClickStream = clicks$
-    .map(() => new Date())
-    .bufferCount(2, 1)
-    .map(([prev, next]) => (next - prev) < timeout)
-    .scan((prev, next) => !prev && next, false)
-    .filter(v => v)
-
+var doubleClickStream = clickStream
+  .bufferWhen(() => clickStream.debounceTime(250))
+  .map(arr => arr.length)
+  .filter(len => len === 2);
 doubleClickStream.subscribe(event => {
   label.textContent = 'double click';
 });
-
 doubleClickStream
   .delay(1000)
   .subscribe(suggestion => {
