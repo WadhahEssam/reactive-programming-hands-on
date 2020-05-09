@@ -51,10 +51,20 @@
 // to the main stream so that you don't have to subscribe to the stream
 // two times in order to get the value of the request
 
-var requestStream = Rx.Observable.of("https://api.github.com/users");
-var responseStream = requestStream.flatMap((requestUrl) => {
-  return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
+var refreshButton = document.querySelector(".refresh");
+var refreshClickStream = Rx.Observable.fromEvent(refreshButton, "click");
+
+var requestOnClickStream = refreshClickStream.map(() => {
+  return "https://api.github.com/users";
 });
+
+var requestOnStartUpStream = Rx.Observable.of("https://api.github.com/users");
+
+var responseStream = requestOnStartUpStream
+  .merge(requestOnClickStream)
+  .flatMap((requestUrl) => {
+    return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
+  });
 
 const createSuggestionStream = (responseStream) => {
   return responseStream.map((usersList) => {
@@ -63,7 +73,6 @@ const createSuggestionStream = (responseStream) => {
 };
 
 const renderSuggestion = (user, selector) => {
-  console.log({ user });
   document.querySelector(selector).children[0].src = user.avatar_url;
   document.querySelector(selector).children[1].innerText = user.login;
   document.querySelector(selector).children[1].href = user.html_url;
