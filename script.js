@@ -19,18 +19,43 @@
 // there is a really cool diagram that shows how events are transforming
 // https://d2eip9sf3oo6c2.cloudfront.net/asciicasts/Introduction%20to%20Reactive%20Programming/original_rxjs-use-an-event-stream-of-double-clicks-in-rxjs/rxjs-use-an-event-stream-of-double-clicks-in-rxjs-click-stream-diagram-one.png?1501284674
 
-var button = document.querySelector('.button')
-var label = document.querySelector('h4');
-var clickStream = Rx.Observable.fromEvent(button, 'click');
-var doubleClickStream = clickStream
-  .bufferWhen(() => clickStream.debounceTime(250))
-  .map(arr => arr.length)
-  .filter(len => len === 2);
-doubleClickStream.subscribe(event => {
-  label.textContent = 'double click';
+// var button = document.querySelector('.button')
+// var label = document.querySelector('h4');
+// var clickStream = Rx.Observable.fromEvent(button, 'click');
+// var doubleClickStream = clickStream
+//   .bufferWhen(() => clickStream.debounceTime(250))
+//   .map(arr => arr.length)
+//   .filter(len => len === 2);
+// doubleClickStream.subscribe(event => {
+//   label.textContent = 'double click';
+// });
+// doubleClickStream
+//   .delay(1000)
+//   .subscribe(suggestion => {
+//     label.textContent = '-';
+//   });
+
+// #3
+// What reactive programming lets you do: It allows you to specify the dynamic
+// behaviour of a value at the time of creation.
+
+// var streamA = Rx.Observable.of(3, 4); // specify the behaviour at declaration
+// var streamB = streamA.map((a) => a * 10);
+// streamB.subscribe((event) => {
+//   console.log(event);
+// });
+
+// #4
+// creating a request with reactive programming
+// FlatMap is used when you have a stream of observables, to merge them 
+// to the main stream so that you don't have to subscribe to the stream
+// two times in order to get the value of the request
+
+var requestStream = Rx.Observable.of("https://api.github.com/users");
+var responseStream = requestStream.flatMap((requestUrl) => {
+  return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
 });
-doubleClickStream
-  .delay(1000)
-  .subscribe(suggestion => {
-    label.textContent = '-';
-  });
+
+responseStream.subscribe((response) => {
+  console.log({ response });
+});
