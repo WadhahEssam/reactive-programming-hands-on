@@ -51,14 +51,33 @@
 // to the main stream so that you don't have to subscribe to the stream
 // two times in order to get the value of the request
 
+const createSuggestionStream = (responseStream) => {
+  return responseStream.map((response) => {
+    return response.data[Math.floor(Math.random() * response.data.length)];
+  }).startWith(null).merge(refreshClickStream.map(e => null)); // effect of reloading
+};
+
+const renderSuggestion = (user, selector) => {
+  if (user === null) {
+    document.querySelector(selector).style.visibility = 'hidden';
+  } else {
+    document.querySelector(selector).style.visibility = 'visible';
+    document.querySelector(selector).children[0].src = user.avatar;
+    document.querySelector(selector).children[1].innerText = `${user.first_name} ${user.last_name}`;
+    document.querySelector(selector).children[1].href = user.email;
+  }
+};
+
+const URL = 'https://reqres.in/api/users?page=2';
+
 var refreshButton = document.querySelector(".refresh");
 var refreshClickStream = Rx.Observable.fromEvent(refreshButton, "click");
 
 var requestOnClickStream = refreshClickStream.map(() => {
-  return "https://api.github.com/users";
+  return URL;
 });
 
-var requestOnStartUpStream = Rx.Observable.of("https://api.github.com/users");
+var requestOnStartUpStream = Rx.Observable.of(URL);
 
 var responseStream = requestOnStartUpStream
   .merge(requestOnClickStream)
@@ -66,24 +85,13 @@ var responseStream = requestOnStartUpStream
     return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
   });
 
-const createSuggestionStream = (responseStream) => {
-  return responseStream.map((usersList) => {
-    return usersList[Math.floor(Math.random() * usersList.length)];
-  });
-};
-
-const renderSuggestion = (user, selector) => {
-  document.querySelector(selector).children[0].src = user.avatar_url;
-  document.querySelector(selector).children[1].innerText = user.login;
-  document.querySelector(selector).children[1].href = user.html_url;
-};
-
 var suggestion1Stream = createSuggestionStream(responseStream);
 var suggestion2Stream = createSuggestionStream(responseStream);
 var suggestion3Stream = createSuggestionStream(responseStream);
 
 for (let i = 1; i <= 3; i++) {
   createSuggestionStream(responseStream).subscribe((user) => {
+    console.log({ user });
     renderSuggestion(user, `.suggestion${i}`);
   });
 }
