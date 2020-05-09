@@ -52,23 +52,28 @@
 // two times in order to get the value of the request
 
 const createSuggestionStream = (responseStream) => {
-  return responseStream.map((response) => {
-    return response.data[Math.floor(Math.random() * response.data.length)];
-  }).startWith(null).merge(refreshClickStream.map(e => null)); // effect of reloading
+  return responseStream
+    .map((response) => {
+      return response.data[Math.floor(Math.random() * response.data.length)];
+    })
+    .startWith(null)
+    .merge(refreshClickStream.map((e) => null)); // effect of reloading
 };
 
 const renderSuggestion = (user, selector) => {
   if (user === null) {
-    document.querySelector(selector).style.visibility = 'hidden';
+    document.querySelector(selector).style.visibility = "hidden";
   } else {
-    document.querySelector(selector).style.visibility = 'visible';
+    document.querySelector(selector).style.visibility = "visible";
     document.querySelector(selector).children[0].src = user.avatar;
-    document.querySelector(selector).children[1].innerText = `${user.first_name} ${user.last_name}`;
+    document.querySelector(
+      selector
+    ).children[1].innerText = `${user.first_name} ${user.last_name}`;
     document.querySelector(selector).children[1].href = user.email;
   }
 };
 
-const URL = 'https://reqres.in/api/users?page=2';
+const URL = "https://reqres.in/api/users?page=2";
 
 var refreshButton = document.querySelector(".refresh");
 var refreshClickStream = Rx.Observable.fromEvent(refreshButton, "click");
@@ -83,7 +88,8 @@ var responseStream = requestOnStartUpStream
   .merge(requestOnClickStream)
   .flatMap((requestUrl) => {
     return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
-  });
+  })
+  .shareReplay(1); // this means that all the subscribers later will share the same stream, ( this will prevent making three calls for every subscription)
 
 var suggestion1Stream = createSuggestionStream(responseStream);
 var suggestion2Stream = createSuggestionStream(responseStream);
