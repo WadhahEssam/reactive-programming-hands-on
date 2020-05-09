@@ -56,6 +56,25 @@ var responseStream = requestStream.flatMap((requestUrl) => {
   return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
 });
 
-responseStream.subscribe((response) => {
-  console.log({ response });
-});
+const createSuggestionStream = (responseStream) => {
+  return responseStream.map((usersList) => {
+    return usersList[Math.floor(Math.random() * usersList.length)];
+  });
+};
+
+const renderSuggestion = (user, selector) => {
+  console.log({ user });
+  document.querySelector(selector).children[0].src = user.avatar_url;
+  document.querySelector(selector).children[1].innerText = user.login;
+  document.querySelector(selector).children[1].href = user.html_url;
+};
+
+var suggestion1Stream = createSuggestionStream(responseStream);
+var suggestion2Stream = createSuggestionStream(responseStream);
+var suggestion3Stream = createSuggestionStream(responseStream);
+
+for (let i = 1; i <= 3; i++) {
+  createSuggestionStream(responseStream).subscribe((user) => {
+    renderSuggestion(user, `.suggestion${i}`);
+  });
+}
